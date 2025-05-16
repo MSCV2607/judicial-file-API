@@ -7,6 +7,7 @@ import com.grupoNoctua.judicial_file_API.entity.Usuario;
 import com.grupoNoctua.judicial_file_API.exception.CustomException;
 import com.grupoNoctua.judicial_file_API.repository.PersonaRepository;
 import com.grupoNoctua.judicial_file_API.repository.UsuarioRepository;
+import com.grupoNoctua.judicial_file_API.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,9 @@ public class AuthService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtService jwtService;
 
     public String register(RegisterRequest request) {
         if (usuarioRepository.findByUsername(request.getUsername()).isPresent()) {
@@ -64,7 +68,10 @@ public class AuthService {
             throw new CustomException("Contraseña incorrecta", 401);
         }
 
-        return "Login exitoso";
+        // ✔️ Generamos y devolvemos el token JWT
+        String token = jwtService.generateToken(usuario.getUsername());
+
+        return token;
     }
 }
 
