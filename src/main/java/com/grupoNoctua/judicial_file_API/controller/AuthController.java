@@ -1,5 +1,6 @@
 package com.grupoNoctua.judicial_file_API.controller;
 
+import com.grupoNoctua.judicial_file_API.dto.LoginRequest;
 import com.grupoNoctua.judicial_file_API.dto.RegisterRequest;
 import com.grupoNoctua.judicial_file_API.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 @CrossOrigin(origins = "*")
 public class AuthController {
+
     @Autowired
     private AuthService authService;
 
@@ -18,4 +20,11 @@ public class AuthController {
         String mensaje = authService.register(request);
         return ResponseEntity.ok(mensaje);
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
+        String mensaje = authService.login(request);
+        return ResponseEntity.ok(mensaje);
+    }
 }
+
