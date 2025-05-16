@@ -1,0 +1,9 @@
+Esta práctica profesional representó un paso clave en mi formación técnica y profesional. Pude aplicar conocimientos adquiridos en programación, diseño de bases de datos, lógica de backend y diseño de interfaces, y además adquirir nuevos como el uso de JWT, Angular avanzado, Spring Boot y despliegue con Docker.
+
+Me enfrenté a situaciones reales de trabajo, requerimientos cambiantes y problemas técnicos complejos que resolví de forma autónoma o consultando con colegas. También mejoré mis habilidades blandas, como la organización, la comunicación con el cliente y la autogestión.
+
+Considero que este tipo de experiencia es fundamental en la carrera. Me ayudó a consolidar lo aprendido, descubrir nuevas áreas de interés y sentirme más preparado para el entorno laboral real.
+
+-------------------------------
+
+Durante este periodo desarollando la aplicacion de expedientes judiciales para el grupo noctua considero que pude avanzar en mi formacion tecnica y profesional, pude aplicar la mayoria de conocimientos e programacion y base de datos adquiridos en estos dos años de tecnicatura, ademas durante el desarollo adquiri nuevos conocimientos como la utilizacion de los frameworks de spring y angular. En estos ultimos meses me enfrente a situaciones reales de trabajo, como requerimientos cambiantes y problemas tecnicos que pude resolverlos buscando en internet, con ayuda de mij tutor o de mis propios compa
