@@ -2,6 +2,7 @@ package com.grupoNoctua.judicial_file_API.controller;
 
 import com.grupoNoctua.judicial_file_API.dto.LoginRequest;
 import com.grupoNoctua.judicial_file_API.dto.RegisterRequest;
+import com.grupoNoctua.judicial_file_API.dto.JwtResponse;
 import com.grupoNoctua.judicial_file_API.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +23,10 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
-        String mensaje = authService.login(request);
-        return ResponseEntity.ok(mensaje);
+    public ResponseEntity<JwtResponse> login(@RequestBody LoginRequest request) {
+        JwtResponse jwt = authService.login(request);
+        return ResponseEntity.ok(jwt);
     }
 }
+
 

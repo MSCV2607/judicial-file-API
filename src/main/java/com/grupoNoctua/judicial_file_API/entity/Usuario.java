@@ -1,13 +1,11 @@
 package com.grupoNoctua.judicial_file_API.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
 
 @Entity
 @Table(name = "usuario")
-
-@NoArgsConstructor @AllArgsConstructor
 public class Usuario {
+
     @Id
     private Long id; // FK de persona
 
@@ -28,6 +26,7 @@ public class Usuario {
     @Column(name = "es_admin")
     private boolean esAdmin;
 
+    // Getters y Setters
     public Long getId() {
         return id;
     }
@@ -68,7 +67,7 @@ public class Usuario {
         this.password = password;
     }
 
-    public boolean isEsAdmin() {
+    public boolean isEsAdmin() { // ⚠️ CORRECTO getter booleano
         return esAdmin;
     }
 
@@ -76,3 +75,4 @@ public class Usuario {
         this.esAdmin = esAdmin;
     }
 }
+

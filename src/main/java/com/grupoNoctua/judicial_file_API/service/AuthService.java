@@ -2,6 +2,7 @@ package com.grupoNoctua.judicial_file_API.service;
 
 import com.grupoNoctua.judicial_file_API.dto.LoginRequest;
 import com.grupoNoctua.judicial_file_API.dto.RegisterRequest;
+import com.grupoNoctua.judicial_file_API.dto.JwtResponse;
 import com.grupoNoctua.judicial_file_API.entity.Persona;
 import com.grupoNoctua.judicial_file_API.entity.Usuario;
 import com.grupoNoctua.judicial_file_API.exception.CustomException;
@@ -58,7 +59,7 @@ public class AuthService {
         return "Usuario registrado correctamente.";
     }
 
-    public String login(LoginRequest request) {
+    public JwtResponse login(LoginRequest request) {
         Usuario usuario = usuarioRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new CustomException("Usuario no encontrado", 404));
 
@@ -68,11 +69,7 @@ public class AuthService {
             throw new CustomException("Contraseña incorrecta", 401);
         }
 
-        // ✔️ Generamos y devolvemos el token JWT
-        String token = jwtService.generateToken(usuario.getUsername());
-
-        return token;
+        String jwtToken = jwtService.generateToken(usuario.getUsername());
+        return new JwtResponse(jwtToken);
     }
 }
-
-
