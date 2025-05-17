@@ -5,8 +5,6 @@ import com.grupoNoctua.judicial_file_API.entity.Usuario;
 import com.grupoNoctua.judicial_file_API.repository.CarpetaRepository;
 import com.grupoNoctua.judicial_file_API.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,7 +13,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class CarpetaService {
@@ -28,24 +29,25 @@ public class CarpetaService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    public void crearCarpeta(String dni, String nombre, String apellido, MultipartFile[] archivos) throws IOException {
-        // 1. Crear carpeta raíz si no existe
+    // ✅ Nuevo método con firma correcta
+    public void crearCarpeta(String dni, String nombre, String apellido, MultipartFile[] archivos, String username) throws IOException {
+        // Verificar carpeta raíz
         File carpetaRaiz = new File(EXPEDIENTES_DIR);
         if (!carpetaRaiz.exists()) carpetaRaiz.mkdir();
 
-        // 2. Validar si la carpeta (expediente) ya existe
+        // Verificar si carpeta ya existe en BD
         Optional<Carpeta> existente = carpetaRepository.findByNumeroCarpeta(dni);
         if (existente.isPresent()) {
             throw new IllegalArgumentException("La carpeta con DNI " + dni + " ya existe.");
         }
 
-        // 3. Crear carpeta física
+        // Crear carpeta física en disco
         File carpetaDNI = new File(EXPEDIENTES_DIR + dni);
         if (!carpetaDNI.mkdir()) {
             throw new IOException("No se pudo crear la carpeta física.");
         }
 
-        // 4. Guardar archivos físicos
+        // Guardar archivos físicos
         for (MultipartFile archivo : archivos) {
             File nuevoArchivo = new File(carpetaDNI, archivo.getOriginalFilename());
             try (FileOutputStream fos = new FileOutputStream(nuevoArchivo)) {
@@ -53,18 +55,7 @@ public class CarpetaService {
             }
         }
 
-        // 5. Obtener usuario autenticado desde el contexto de seguridad
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();  // Usuario logueado
-
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername(username);
-        if (usuarioOpt.isEmpty()) {
-            throw new IllegalArgumentException("Usuario autenticado no encontrado");
-        }
-
-        Usuario usuario = usuarioOpt.get();
-
-        // 6. Crear la entidad Carpeta y asociar datos
+        // Crear la entidad Carpeta
         Carpeta carpeta = new Carpeta();
         carpeta.setNumeroCarpeta(dni);
         carpeta.setDescripcion(nombre + " " + apellido);
@@ -72,13 +63,20 @@ public class CarpetaService {
         carpeta.setUltimaActualizacion(LocalDateTime.now());
         carpeta.setDirectorio(carpetaDNI.getAbsolutePath());
 
+        // Buscar usuario autenticado y asignar como encargado
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername(username);
+        if (usuarioOpt.isEmpty()) {
+            throw new IllegalArgumentException("Usuario autenticado no encontrado.");
+        }
+
         Set<Usuario> encargados = new HashSet<>();
-        encargados.add(usuario);
+        encargados.add(usuarioOpt.get());
         carpeta.setEncargados(encargados);
 
         carpetaRepository.save(carpeta);
     }
 
+    // ✅ Método para listar carpetas del usuario autenticado
     public List<Carpeta> listarCarpetasPorUsuario(String username) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername(username);
         if (usuarioOpt.isEmpty()) {
@@ -91,3 +89,4 @@ public class CarpetaService {
                 .toList();
     }
 }
+
