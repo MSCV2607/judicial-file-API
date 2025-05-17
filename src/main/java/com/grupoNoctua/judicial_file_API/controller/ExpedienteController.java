@@ -3,6 +3,7 @@ package com.grupoNoctua.judicial_file_API.controller;
 import com.grupoNoctua.judicial_file_API.service.ExpedienteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,4 +32,13 @@ public class ExpedienteController {
             return ResponseEntity.internalServerError().body("Error al guardar archivos");
         }
     }
+
+    // ✅ Nuevo endpoint: LISTAR
+    @GetMapping("/listar")
+    public ResponseEntity<String> listarExpedientes(Authentication auth) {
+        String username = auth.getName();
+        return ResponseEntity.ok("Listando expedientes para: " + username);
+    }
 }
+
+
