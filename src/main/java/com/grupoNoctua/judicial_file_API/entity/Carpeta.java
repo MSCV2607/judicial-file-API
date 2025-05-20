@@ -14,7 +14,7 @@ public class Carpeta {
     private Long id;
 
     @Column(name = "numero_carpeta", unique = true, nullable = false)
-    private String numeroCarpeta; // ej: DNI
+    private String numeroCarpeta;
 
     @Column(length = 500)
     private String descripcion;
@@ -27,12 +27,14 @@ public class Carpeta {
     @Column(name = "ultima_actualizacion")
     private LocalDateTime ultimaActualizacion;
 
-    private String directorio; // ruta física en disco
+    @Column(name = "descripcion_ultima_actualizacion")
+    private String descripcionUltimaActualizacion;
+
+    private String directorio;
 
     @Column(name = "tipo_archivo")
     private String tipoArchivo;
 
-    // Relación N:M con Usuario (encargados)
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "encargado_carpeta",
@@ -41,7 +43,6 @@ public class Carpeta {
     )
     private Set<Usuario> encargados;
 
-    // Relación N:M con Cliente (dueños)
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "cliente_carpeta",
@@ -50,13 +51,12 @@ public class Carpeta {
     )
     private Set<Cliente> clientes;
 
-    // CONSTRUCTORES
-
-    public Carpeta() {
-    }
+    // Constructores
+    public Carpeta() {}
 
     public Carpeta(Long id, String numeroCarpeta, String descripcion, String estado,
                    LocalDate fechaCreacion, LocalDateTime ultimaActualizacion,
+                   String descripcionUltimaActualizacion,
                    String directorio, String tipoArchivo,
                    Set<Usuario> encargados, Set<Cliente> clientes) {
         this.id = id;
@@ -65,13 +65,14 @@ public class Carpeta {
         this.estado = estado;
         this.fechaCreacion = fechaCreacion;
         this.ultimaActualizacion = ultimaActualizacion;
+        this.descripcionUltimaActualizacion = descripcionUltimaActualizacion;
         this.directorio = directorio;
         this.tipoArchivo = tipoArchivo;
         this.encargados = encargados;
         this.clientes = clientes;
     }
 
-    // GETTERS Y SETTERS
+    // Getters y Setters
 
     public Long getId() {
         return id;
@@ -121,6 +122,14 @@ public class Carpeta {
         this.ultimaActualizacion = ultimaActualizacion;
     }
 
+    public String getDescripcionUltimaActualizacion() {
+        return descripcionUltimaActualizacion;
+    }
+
+    public void setDescripcionUltimaActualizacion(String descripcionUltimaActualizacion) {
+        this.descripcionUltimaActualizacion = descripcionUltimaActualizacion;
+    }
+
     public String getDirectorio() {
         return directorio;
     }
@@ -153,4 +162,5 @@ public class Carpeta {
         this.clientes = clientes;
     }
 }
+
 

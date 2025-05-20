@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -33,7 +34,6 @@ public class CarpetaService {
     @Autowired
     private JwtService jwtService;
 
-    // Crear nueva carpeta
     public void crearCarpeta(String dni, String nombre, String apellido, MultipartFile[] archivos) throws IOException {
         File carpetaRaiz = new File(EXPEDIENTES_DIR);
         if (!carpetaRaiz.exists()) carpetaRaiz.mkdir();
@@ -60,6 +60,8 @@ public class CarpetaService {
         carpeta.setDescripcion(nombre + " " + apellido);
         carpeta.setFechaCreacion(LocalDate.now());
         carpeta.setUltimaActualizacion(LocalDateTime.now());
+        carpeta.setEstado("ACTUALIZACIÓN RECIENTE");
+        carpeta.setDescripcionUltimaActualizacion("Carpeta creada con " + archivos.length + " archivo(s).");
         carpeta.setDirectorio(carpetaDNI.getAbsolutePath());
 
         String username = obtenerUsernameActual();
@@ -75,7 +77,6 @@ public class CarpetaService {
         carpetaRepository.save(carpeta);
     }
 
-    // Listar carpetas del usuario autenticado
     public List<Carpeta> listarCarpetasDelUsuarioAutenticado() {
         String username = obtenerUsernameActual();
         Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername(username);
@@ -89,7 +90,6 @@ public class CarpetaService {
                 .toList();
     }
 
-    // Listar archivos físicos por DNI
     public List<String> listarArchivosPorDni(String dni) throws IOException {
         File carpetaDni = new File(EXPEDIENTES_DIR + dni);
         if (!carpetaDni.exists() || !carpetaDni.isDirectory()) {
@@ -101,7 +101,6 @@ public class CarpetaService {
         return Arrays.asList(archivos);
     }
 
-    // Descargar carpeta completa en ZIP
     public void descargarCarpetaComoZip(String dni, HttpServletResponse response) throws IOException {
         File carpeta = new File(EXPEDIENTES_DIR + dni);
         if (!carpeta.exists() || !carpeta.isDirectory()) {
@@ -141,7 +140,6 @@ public class CarpetaService {
         zipTemporal.delete();
     }
 
-    // Descargar archivo específico
     public void descargarArchivoEspecifico(String dni, String nombreArchivo, HttpServletResponse response) throws IOException {
         File archivo = new File(EXPEDIENTES_DIR + dni + "/" + nombreArchivo);
         if (!archivo.exists() || !archivo.isFile()) {
@@ -157,8 +155,7 @@ public class CarpetaService {
         }
     }
 
-    // Subir nuevos archivos a carpeta existente
-    public void agregarArchivosACarpeta(String dni, MultipartFile[] archivos) throws IOException {
+    public void agregarArchivosACarpeta(String dni, MultipartFile[] archivos, String descripcion) throws IOException {
         Optional<Carpeta> carpetaOpt = carpetaRepository.findByNumeroCarpeta(dni);
         if (carpetaOpt.isEmpty()) {
             throw new IllegalArgumentException("No existe una carpeta con ese DNI");
@@ -178,10 +175,54 @@ public class CarpetaService {
 
         Carpeta carpeta = carpetaOpt.get();
         carpeta.setUltimaActualizacion(LocalDateTime.now());
+        carpeta.setEstado(calcularEstado(carpeta.getUltimaActualizacion()));
+        carpeta.setDescripcionUltimaActualizacion(descripcion);
         carpetaRepository.save(carpeta);
     }
 
-    // Extrae el username desde el JWT
+    public void eliminarArchivoDeCarpeta(String dni, String nombreArchivo, String descripcion) throws IOException {
+        File archivo = new File(EXPEDIENTES_DIR + dni + "/" + nombreArchivo);
+        if (!archivo.exists() || !archivo.isFile()) {
+            throw new IOException("El archivo no existe");
+        }
+
+        if (!archivo.delete()) {
+            throw new IOException("No se pudo eliminar el archivo");
+        }
+
+        Optional<Carpeta> carpetaOpt = carpetaRepository.findByNumeroCarpeta(dni);
+        if (carpetaOpt.isPresent()) {
+            Carpeta carpeta = carpetaOpt.get();
+            carpeta.setUltimaActualizacion(LocalDateTime.now());
+            carpeta.setEstado(calcularEstado(carpeta.getUltimaActualizacion()));
+            carpeta.setDescripcionUltimaActualizacion(descripcion);
+            carpetaRepository.save(carpeta);
+        }
+    }
+
+    public void eliminarCarpetaCompleta(String dni) throws IOException {
+        Optional<Carpeta> carpetaOpt = carpetaRepository.findByNumeroCarpeta(dni);
+        if (carpetaOpt.isEmpty()) {
+            throw new IllegalArgumentException("No existe una carpeta con ese DNI");
+        }
+
+        File carpetaDni = new File(EXPEDIENTES_DIR + dni);
+        if (carpetaDni.exists()) {
+            eliminarRecursivamente(carpetaDni);
+        }
+
+        carpetaRepository.delete(carpetaOpt.get());
+    }
+
+    private void eliminarRecursivamente(File file) {
+        if (file.isDirectory()) {
+            for (File sub : Objects.requireNonNull(file.listFiles())) {
+                eliminarRecursivamente(sub);
+            }
+        }
+        file.delete();
+    }
+
     private String obtenerUsernameActual() {
         ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = attrs.getRequest();
@@ -193,54 +234,13 @@ public class CarpetaService {
         return jwtService.extractUsername(token);
     }
 
-    //Eliminacion
-    public void eliminarArchivoDeCarpeta(String dni, String nombreArchivo) throws IOException {
-        File archivo = new File(EXPEDIENTES_DIR + dni + "/" + nombreArchivo);
-        if (!archivo.exists() || !archivo.isFile()) {
-            throw new IOException("El archivo no existe");
-        }
-
-        if (!archivo.delete()) {
-            throw new IOException("No se pudo eliminar el archivo");
-        }
-
-        // Actualizar la fecha de modificación de la carpeta en la base de datos
-        Optional<Carpeta> carpetaOpt = carpetaRepository.findByNumeroCarpeta(dni);
-        if (carpetaOpt.isPresent()) {
-            Carpeta carpeta = carpetaOpt.get();
-            carpeta.setUltimaActualizacion(LocalDateTime.now());
-            carpetaRepository.save(carpeta);
-        }
+    private String calcularEstado(LocalDateTime ultimaActualizacion) {
+        long dias = ChronoUnit.DAYS.between(ultimaActualizacion.toLocalDate(), LocalDate.now());
+        if (dias <= 10) return "ACTUALIZACIÓN RECIENTE";
+        if (dias <= 20) return "ACTUALIZACIÓN POCO RECIENTE";
+        return "HACE MUCHO NO SE ACTUALIZA";
     }
-
-    // Eliminar carpeta completa (archivos físicos y base de datos)
-    public void eliminarCarpetaCompleta(String dni) throws IOException {
-        // Buscar carpeta en BD
-        Optional<Carpeta> carpetaOpt = carpetaRepository.findByNumeroCarpeta(dni);
-        if (carpetaOpt.isEmpty()) {
-            throw new IllegalArgumentException("No existe una carpeta con ese DNI");
-        }
-
-        // Eliminar carpeta física recursivamente
-        File carpetaDni = new File(EXPEDIENTES_DIR + dni);
-        if (carpetaDni.exists()) {
-            eliminarRecursivamente(carpetaDni);
-        }
-
-        // Eliminar de la base de datos
-        carpetaRepository.delete(carpetaOpt.get());
-    }
-
-    // Eliminar archivos/carpetas de forma recursiva
-    private void eliminarRecursivamente(File file) {
-        if (file.isDirectory()) {
-            for (File sub : Objects.requireNonNull(file.listFiles())) {
-                eliminarRecursivamente(sub);
-            }
-        }
-        file.delete();
-    }
-
 }
+
 
 

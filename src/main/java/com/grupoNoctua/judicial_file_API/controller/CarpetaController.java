@@ -67,29 +67,29 @@ public class CarpetaController {
     @PostMapping("/actualizar")
     public ResponseEntity<String> agregarArchivosACarpeta(
             @RequestParam String dni,
-            @RequestParam MultipartFile[] archivos) {
+            @RequestParam MultipartFile[] archivos,
+            @RequestParam String descripcion) {
         try {
-            carpetaService.agregarArchivosACarpeta(dni, archivos);
+            carpetaService.agregarArchivosACarpeta(dni, archivos, descripcion);
             return ResponseEntity.ok("Archivos agregados correctamente");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error al subir archivos");
         }
     }
 
-    // eliminar archivo específico
     @DeleteMapping("/archivo")
     public ResponseEntity<String> eliminarArchivo(
             @RequestParam String dni,
-            @RequestParam String nombreArchivo) {
+            @RequestParam String nombreArchivo,
+            @RequestParam String descripcion) {
         try {
-            carpetaService.eliminarArchivoDeCarpeta(dni, nombreArchivo);
+            carpetaService.eliminarArchivoDeCarpeta(dni, nombreArchivo, descripcion);
             return ResponseEntity.ok("Archivo eliminado correctamente");
         } catch (IOException e) {
             return ResponseEntity.status(500).body("Error al eliminar archivo: " + e.getMessage());
         }
     }
 
-    // Eliminar carpeta completa
     @DeleteMapping("/eliminar")
     public ResponseEntity<String> eliminarCarpetaCompleta(@RequestParam String dni) {
         try {
@@ -101,5 +101,4 @@ public class CarpetaController {
             return ResponseEntity.internalServerError().body("Error al eliminar la carpeta: " + e.getMessage());
         }
     }
-
 }
