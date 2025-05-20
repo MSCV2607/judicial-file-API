@@ -62,6 +62,21 @@ public class CarpetaController {
     public void descargarArchivo(@RequestParam String dni, @RequestParam String nombre, HttpServletResponse response) throws IOException {
         carpetaService.descargarArchivoEspecifico(dni, nombre, response);
     }
+
+    @PutMapping("/actualizar")
+    public ResponseEntity<String> agregarArchivos(
+            @RequestParam String dni,
+            @RequestParam MultipartFile[] archivos) {
+        try {
+            carpetaService.agregarArchivosACarpeta(dni, archivos);
+            return ResponseEntity.ok("Archivos agregados correctamente");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body("Error al guardar archivos");
+        }
+    }
+
 }
 
 

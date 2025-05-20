@@ -45,8 +45,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/expedientes/**").authenticated()
-                        .requestMatchers("/carpetas/**").authenticated()  // <<< NECESARIO para permitir descarga
+                        .requestMatchers("/carpetas/**").authenticated()  // ← asegurate que esto esté
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -68,4 +67,5 @@ public class SecurityConfig {
         return source;
     }
 }
+
 

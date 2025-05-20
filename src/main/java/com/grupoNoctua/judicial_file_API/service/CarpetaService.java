@@ -162,5 +162,31 @@ public class CarpetaService {
         String token = authHeader.substring(7);
         return jwtService.extractUsername(token);
     }
+
+    //-------------------------------------------
+    public void agregarArchivosACarpeta(String dni, MultipartFile[] archivos) throws IOException {
+        // Buscar carpeta en base de datos
+        Optional<Carpeta> carpetaOpt = carpetaRepository.findByNumeroCarpeta(dni);
+        if (carpetaOpt.isEmpty()) {
+            throw new IllegalArgumentException("No existe una carpeta con ese DNI");
+        }
+
+        File carpetaDni = new File(EXPEDIENTES_DIR + dni);
+        if (!carpetaDni.exists()) {
+            throw new IOException("La carpeta física no existe en el servidor");
+        }
+
+        for (MultipartFile archivo : archivos) {
+            File nuevoArchivo = new File(carpetaDni, archivo.getOriginalFilename());
+            try (FileOutputStream fos = new FileOutputStream(nuevoArchivo)) {
+                fos.write(archivo.getBytes());
+            }
+        }
+
+        Carpeta carpeta = carpetaOpt.get();
+        carpeta.setUltimaActualizacion(LocalDateTime.now());
+        carpetaRepository.save(carpeta);
+    }
+
 }
 
