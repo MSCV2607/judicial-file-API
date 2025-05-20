@@ -2,6 +2,7 @@ package com.grupoNoctua.judicial_file_API.controller;
 
 import com.grupoNoctua.judicial_file_API.entity.Carpeta;
 import com.grupoNoctua.judicial_file_API.service.CarpetaService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,7 +41,7 @@ public class CarpetaController {
         return ResponseEntity.ok(carpetas);
     }
 
-    
+
     @GetMapping("/archivos/{dni}")
     public ResponseEntity<List<String>> verArchivosDeCarpeta(@PathVariable String dni) {
         try {
@@ -49,6 +50,11 @@ public class CarpetaController {
         } catch (IOException e) {
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    @GetMapping("/descargar")
+    public void descargarCarpeta(@RequestParam String dni, HttpServletResponse response) throws IOException {
+        carpetaService.descargarCarpetaComoZip(dni, response);
     }
 }
 

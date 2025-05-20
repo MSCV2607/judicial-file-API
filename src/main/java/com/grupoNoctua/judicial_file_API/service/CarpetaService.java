@@ -5,19 +5,20 @@ import com.grupoNoctua.judicial_file_API.entity.Usuario;
 import com.grupoNoctua.judicial_file_API.repository.CarpetaRepository;
 import com.grupoNoctua.judicial_file_API.repository.UsuarioRepository;
 import com.grupoNoctua.judicial_file_API.security.JwtService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.servlet.http.HttpServletRequest;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 public class CarpetaService {
@@ -87,7 +88,6 @@ public class CarpetaService {
                 .toList();
     }
 
-    // 🔽 NUEVO MÉTODO - Listar archivos físicos por DNI
     public List<String> listarArchivosPorDni(String dni) throws IOException {
         File carpetaDni = new File(EXPEDIENTES_DIR + dni);
         if (!carpetaDni.exists() || !carpetaDni.isDirectory()) {
@@ -99,7 +99,35 @@ public class CarpetaService {
         return Arrays.asList(archivos);
     }
 
-    // 🔐 Extraer username del token
+    public void descargarCarpetaComoZip(String dni, HttpServletResponse response) throws IOException {
+        File carpeta = new File(EXPEDIENTES_DIR + dni);
+        if (!carpeta.exists() || !carpeta.isDirectory()) {
+            throw new IllegalArgumentException("La carpeta no existe.");
+        }
+
+        response.setContentType("application/zip");
+        response.setHeader("Content-Disposition", "attachment; filename=" + dni + ".zip");
+
+        try (ZipOutputStream zipOut = new ZipOutputStream(response.getOutputStream())) {
+            File[] archivos = carpeta.listFiles();
+            if (archivos != null) {
+                for (File archivo : archivos) {
+                    try (FileInputStream fis = new FileInputStream(archivo)) {
+                        ZipEntry zipEntry = new ZipEntry(archivo.getName());
+                        zipOut.putNextEntry(zipEntry);
+
+                        byte[] buffer = new byte[1024];
+                        int length;
+                        while ((length = fis.read(buffer)) >= 0) {
+                            zipOut.write(buffer, 0, length);
+                        }
+                    }
+                }
+            }
+            zipOut.finish();
+        }
+    }
+
     private String obtenerUsernameActual() {
         ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = attrs.getRequest();
