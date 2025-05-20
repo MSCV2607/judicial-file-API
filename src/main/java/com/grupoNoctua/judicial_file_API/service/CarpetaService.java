@@ -240,6 +240,26 @@ public class CarpetaService {
         if (dias <= 20) return "ACTUALIZACIÓN POCO RECIENTE";
         return "HACE MUCHO NO SE ACTUALIZA";
     }
+
+    public List<Carpeta> buscarCarpetasPorTexto(String query) {
+        String username = obtenerUsernameActual();
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername(username);
+        if (usuarioOpt.isEmpty()) {
+            throw new IllegalArgumentException("Usuario no encontrado");
+        }
+        Usuario usuario = usuarioOpt.get();
+
+        String texto = query.toLowerCase();
+
+        return carpetaRepository.findAll().stream()
+                .filter(c -> c.getEncargados().contains(usuario))
+                .filter(c ->
+                        c.getNumeroCarpeta().toLowerCase().contains(texto) ||
+                                c.getDescripcion().toLowerCase().contains(texto)
+                )
+                .toList();
+    }
+
 }
 
 

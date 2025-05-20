@@ -101,4 +101,11 @@ public class CarpetaController {
             return ResponseEntity.internalServerError().body("Error al eliminar la carpeta: " + e.getMessage());
         }
     }
+
+    @GetMapping("/buscar")
+    public ResponseEntity<List<Carpeta>> buscarCarpetas(@RequestParam String query) {
+        List<Carpeta> resultados = carpetaService.buscarCarpetasPorTexto(query);
+        return ResponseEntity.ok(resultados);
+    }
+
 }
