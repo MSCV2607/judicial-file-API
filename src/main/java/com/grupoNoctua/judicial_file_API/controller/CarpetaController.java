@@ -3,6 +3,7 @@ package com.grupoNoctua.judicial_file_API.controller;
 import com.grupoNoctua.judicial_file_API.entity.Carpeta;
 import com.grupoNoctua.judicial_file_API.service.CarpetaService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -55,6 +56,11 @@ public class CarpetaController {
     @GetMapping("/descargar")
     public void descargarCarpeta(@RequestParam String dni, HttpServletResponse response) throws IOException {
         carpetaService.descargarCarpetaComoZip(dni, response);
+    }
+
+    @GetMapping("/descargar-archivo")
+    public void descargarArchivo(@RequestParam String dni, @RequestParam String nombre, HttpServletResponse response) throws IOException {
+        carpetaService.descargarArchivoEspecifico(dni, nombre, response);
     }
 }
 
