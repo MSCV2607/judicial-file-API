@@ -3,7 +3,6 @@ package com.grupoNoctua.judicial_file_API.controller;
 import com.grupoNoctua.judicial_file_API.entity.Carpeta;
 import com.grupoNoctua.judicial_file_API.service.CarpetaService;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -42,7 +41,6 @@ public class CarpetaController {
         return ResponseEntity.ok(carpetas);
     }
 
-
     @GetMapping("/archivos/{dni}")
     public ResponseEntity<List<String>> verArchivosDeCarpeta(@PathVariable String dni) {
         try {
@@ -58,26 +56,40 @@ public class CarpetaController {
         carpetaService.descargarCarpetaComoZip(dni, response);
     }
 
-    @GetMapping("/descargar-archivo")
-    public void descargarArchivo(@RequestParam String dni, @RequestParam String nombre, HttpServletResponse response) throws IOException {
-        carpetaService.descargarArchivoEspecifico(dni, nombre, response);
+    @GetMapping("/archivo")
+    public void descargarArchivoEspecifico(
+            @RequestParam String dni,
+            @RequestParam String nombreArchivo,
+            HttpServletResponse response) throws IOException {
+        carpetaService.descargarArchivoEspecifico(dni, nombreArchivo, response);
     }
 
-    @PutMapping("/actualizar")
-    public ResponseEntity<String> agregarArchivos(
+    @PostMapping("/actualizar")
+    public ResponseEntity<String> agregarArchivosACarpeta(
             @RequestParam String dni,
             @RequestParam MultipartFile[] archivos) {
         try {
             carpetaService.agregarArchivosACarpeta(dni, archivos);
             return ResponseEntity.ok("Archivos agregados correctamente");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (IOException e) {
-            return ResponseEntity.internalServerError().body("Error al guardar archivos");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error al subir archivos");
         }
     }
 
+    // eliminar archivo específico
+    @DeleteMapping("/archivo")
+    public ResponseEntity<String> eliminarArchivo(
+            @RequestParam String dni,
+            @RequestParam String nombreArchivo) {
+        try {
+            carpetaService.eliminarArchivoDeCarpeta(dni, nombreArchivo);
+            return ResponseEntity.ok("Archivo eliminado correctamente");
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body("Error al eliminar archivo: " + e.getMessage());
+        }
+    }
 }
+
 
 
 
