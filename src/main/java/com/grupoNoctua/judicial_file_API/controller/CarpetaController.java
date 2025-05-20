@@ -88,8 +88,18 @@ public class CarpetaController {
             return ResponseEntity.status(500).body("Error al eliminar archivo: " + e.getMessage());
         }
     }
+
+    // Eliminar carpeta completa
+    @DeleteMapping("/eliminar")
+    public ResponseEntity<String> eliminarCarpetaCompleta(@RequestParam String dni) {
+        try {
+            carpetaService.eliminarCarpetaCompleta(dni);
+            return ResponseEntity.ok("Carpeta eliminada correctamente");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body("Error al eliminar la carpeta: " + e.getMessage());
+        }
+    }
+
 }
-
-
-
-

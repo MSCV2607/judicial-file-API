@@ -212,6 +212,35 @@ public class CarpetaService {
             carpetaRepository.save(carpeta);
         }
     }
+
+    // Eliminar carpeta completa (archivos físicos y base de datos)
+    public void eliminarCarpetaCompleta(String dni) throws IOException {
+        // Buscar carpeta en BD
+        Optional<Carpeta> carpetaOpt = carpetaRepository.findByNumeroCarpeta(dni);
+        if (carpetaOpt.isEmpty()) {
+            throw new IllegalArgumentException("No existe una carpeta con ese DNI");
+        }
+
+        // Eliminar carpeta física recursivamente
+        File carpetaDni = new File(EXPEDIENTES_DIR + dni);
+        if (carpetaDni.exists()) {
+            eliminarRecursivamente(carpetaDni);
+        }
+
+        // Eliminar de la base de datos
+        carpetaRepository.delete(carpetaOpt.get());
+    }
+
+    // Eliminar archivos/carpetas de forma recursiva
+    private void eliminarRecursivamente(File file) {
+        if (file.isDirectory()) {
+            for (File sub : Objects.requireNonNull(file.listFiles())) {
+                eliminarRecursivamente(sub);
+            }
+        }
+        file.delete();
+    }
+
 }
 
 
