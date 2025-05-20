@@ -4,19 +4,20 @@ import com.grupoNoctua.judicial_file_API.entity.Carpeta;
 import com.grupoNoctua.judicial_file_API.entity.Usuario;
 import com.grupoNoctua.judicial_file_API.repository.CarpetaRepository;
 import com.grupoNoctua.judicial_file_API.repository.UsuarioRepository;
+import com.grupoNoctua.judicial_file_API.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class CarpetaService {
@@ -29,25 +30,23 @@ public class CarpetaService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    // ✅ Nuevo método con firma correcta
-    public void crearCarpeta(String dni, String nombre, String apellido, MultipartFile[] archivos, String username) throws IOException {
-        // Verificar carpeta raíz
+    @Autowired
+    private JwtService jwtService;
+
+    public void crearCarpeta(String dni, String nombre, String apellido, MultipartFile[] archivos) throws IOException {
         File carpetaRaiz = new File(EXPEDIENTES_DIR);
         if (!carpetaRaiz.exists()) carpetaRaiz.mkdir();
 
-        // Verificar si carpeta ya existe en BD
         Optional<Carpeta> existente = carpetaRepository.findByNumeroCarpeta(dni);
         if (existente.isPresent()) {
             throw new IllegalArgumentException("La carpeta con DNI " + dni + " ya existe.");
         }
 
-        // Crear carpeta física en disco
         File carpetaDNI = new File(EXPEDIENTES_DIR + dni);
         if (!carpetaDNI.mkdir()) {
             throw new IOException("No se pudo crear la carpeta física.");
         }
 
-        // Guardar archivos físicos
         for (MultipartFile archivo : archivos) {
             File nuevoArchivo = new File(carpetaDNI, archivo.getOriginalFilename());
             try (FileOutputStream fos = new FileOutputStream(nuevoArchivo)) {
@@ -55,7 +54,6 @@ public class CarpetaService {
             }
         }
 
-        // Crear la entidad Carpeta
         Carpeta carpeta = new Carpeta();
         carpeta.setNumeroCarpeta(dni);
         carpeta.setDescripcion(nombre + " " + apellido);
@@ -63,10 +61,10 @@ public class CarpetaService {
         carpeta.setUltimaActualizacion(LocalDateTime.now());
         carpeta.setDirectorio(carpetaDNI.getAbsolutePath());
 
-        // Buscar usuario autenticado y asignar como encargado
+        String username = obtenerUsernameActual();
         Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername(username);
         if (usuarioOpt.isEmpty()) {
-            throw new IllegalArgumentException("Usuario autenticado no encontrado.");
+            throw new IllegalArgumentException("Usuario autenticado no encontrado");
         }
 
         Set<Usuario> encargados = new HashSet<>();
@@ -76,8 +74,8 @@ public class CarpetaService {
         carpetaRepository.save(carpeta);
     }
 
-    // ✅ Método para listar carpetas del usuario autenticado
-    public List<Carpeta> listarCarpetasPorUsuario(String username) {
+    public List<Carpeta> listarCarpetasDelUsuarioAutenticado() {
+        String username = obtenerUsernameActual();
         Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername(username);
         if (usuarioOpt.isEmpty()) {
             throw new IllegalArgumentException("Usuario no encontrado");
@@ -88,5 +86,30 @@ public class CarpetaService {
                 .filter(c -> c.getEncargados().contains(usuario))
                 .toList();
     }
+
+    // 🔽 NUEVO MÉTODO - Listar archivos físicos por DNI
+    public List<String> listarArchivosPorDni(String dni) throws IOException {
+        File carpetaDni = new File(EXPEDIENTES_DIR + dni);
+        if (!carpetaDni.exists() || !carpetaDni.isDirectory()) {
+            throw new IOException("Carpeta no encontrada en el servidor.");
+        }
+
+        String[] archivos = carpetaDni.list();
+        if (archivos == null) return List.of();
+        return Arrays.asList(archivos);
+    }
+
+    // 🔐 Extraer username del token
+    private String obtenerUsernameActual() {
+        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        HttpServletRequest request = attrs.getRequest();
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new IllegalStateException("Token no presente");
+        }
+        String token = authHeader.substring(7);
+        return jwtService.extractUsername(token);
+    }
 }
+
 
