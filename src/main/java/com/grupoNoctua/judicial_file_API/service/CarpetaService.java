@@ -1,8 +1,12 @@
 package com.grupoNoctua.judicial_file_API.service;
 
 import com.grupoNoctua.judicial_file_API.entity.Carpeta;
+import com.grupoNoctua.judicial_file_API.entity.Cliente;
+import com.grupoNoctua.judicial_file_API.entity.Persona;
 import com.grupoNoctua.judicial_file_API.entity.Usuario;
 import com.grupoNoctua.judicial_file_API.repository.CarpetaRepository;
+import com.grupoNoctua.judicial_file_API.repository.ClienteRepository;
+import com.grupoNoctua.judicial_file_API.repository.PersonaRepository;
 import com.grupoNoctua.judicial_file_API.repository.UsuarioRepository;
 import com.grupoNoctua.judicial_file_API.security.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,16 +29,13 @@ public class CarpetaService {
 
     private static final String EXPEDIENTES_DIR = System.getProperty("user.dir") + "/EXPEDIENTES/";
 
-    @Autowired
-    private CarpetaRepository carpetaRepository;
+    @Autowired private CarpetaRepository carpetaRepository;
+    @Autowired private UsuarioRepository usuarioRepository;
+    @Autowired private ClienteRepository clienteRepository;
+    @Autowired private PersonaRepository personaRepository;
+    @Autowired private JwtService jwtService;
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private JwtService jwtService;
-
-    public void crearCarpeta(String dni, String nombre, String apellido, MultipartFile[] archivos) throws IOException {
+    public void crearCarpeta(String dni, String nombre, String apellido, String telefono, String correo, MultipartFile[] archivos) throws IOException {
         File carpetaRaiz = new File(EXPEDIENTES_DIR);
         if (!carpetaRaiz.exists()) carpetaRaiz.mkdir();
 
@@ -55,6 +56,25 @@ public class CarpetaService {
             }
         }
 
+        // Crear persona si no existe
+        Persona persona = personaRepository.findByDni(dni).orElseGet(() -> {
+            Persona p = new Persona();
+            p.setDni(dni);
+            p.setNombre(nombre);
+            p.setApellido(apellido);
+            return personaRepository.save(p);
+        });
+
+        // Crear cliente si no existe
+        Cliente cliente = clienteRepository.findById(persona.getId()).orElseGet(() -> {
+            Cliente c = new Cliente();
+            c.setId(persona.getId());
+            c.setEdad(0);
+            c.setTelefono((telefono == null || telefono.isEmpty()) ? "N/A" : telefono);
+            c.setCorreo((correo == null || correo.isEmpty()) ? "N/A" : correo);
+            return clienteRepository.save(c);
+        });
+
         Carpeta carpeta = new Carpeta();
         carpeta.setNumeroCarpeta(dni);
         carpeta.setDescripcion(nombre + " " + apellido);
@@ -70,21 +90,17 @@ public class CarpetaService {
             throw new IllegalArgumentException("Usuario autenticado no encontrado");
         }
 
-        Set<Usuario> encargados = new HashSet<>();
-        encargados.add(usuarioOpt.get());
-        carpeta.setEncargados(encargados);
+        carpeta.setEncargados(Set.of(usuarioOpt.get()));
+        carpeta.setClientes(Set.of(cliente));
 
         carpetaRepository.save(carpeta);
     }
 
     public List<Carpeta> listarCarpetasDelUsuarioAutenticado() {
         String username = obtenerUsernameActual();
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername(username);
-        if (usuarioOpt.isEmpty()) {
-            throw new IllegalArgumentException("Usuario no encontrado");
-        }
+        Usuario usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-        Usuario usuario = usuarioOpt.get();
         return carpetaRepository.findAll().stream()
                 .filter(c -> c.getEncargados().contains(usuario))
                 .toList();
@@ -97,15 +113,12 @@ public class CarpetaService {
         }
 
         String[] archivos = carpetaDni.list();
-        if (archivos == null) return List.of();
-        return Arrays.asList(archivos);
+        return archivos == null ? List.of() : Arrays.asList(archivos);
     }
 
     public void descargarCarpetaComoZip(String dni, HttpServletResponse response) throws IOException {
         File carpeta = new File(EXPEDIENTES_DIR + dni);
-        if (!carpeta.exists() || !carpeta.isDirectory()) {
-            throw new IOException("Carpeta no encontrada");
-        }
+        if (!carpeta.exists()) throw new IOException("Carpeta no encontrada");
 
         File zipTemporal = File.createTempFile("expediente_" + dni + "_", ".zip");
 
@@ -117,34 +130,26 @@ public class CarpetaService {
             if (archivos != null) {
                 for (File archivo : archivos) {
                     zos.putNextEntry(new java.util.zip.ZipEntry(archivo.getName()));
-                    FileInputStream fis = new FileInputStream(archivo);
-                    byte[] buffer = new byte[1024];
-                    int length;
-                    while ((length = fis.read(buffer)) >= 0) {
-                        zos.write(buffer, 0, length);
+                    try (FileInputStream fis = new FileInputStream(archivo)) {
+                        IOUtils.copy(fis, zos);
                     }
                     zos.closeEntry();
-                    fis.close();
                 }
             }
         }
 
         response.setContentType("application/zip");
         response.setHeader("Content-Disposition", "attachment; filename=" + dni + ".zip");
-
         try (InputStream is = new FileInputStream(zipTemporal)) {
             IOUtils.copy(is, response.getOutputStream());
             response.flushBuffer();
         }
-
         zipTemporal.delete();
     }
 
     public void descargarArchivoEspecifico(String dni, String nombreArchivo, HttpServletResponse response) throws IOException {
         File archivo = new File(EXPEDIENTES_DIR + dni + "/" + nombreArchivo);
-        if (!archivo.exists() || !archivo.isFile()) {
-            throw new IOException("El archivo no existe");
-        }
+        if (!archivo.exists()) throw new IOException("El archivo no existe");
 
         response.setContentType("application/octet-stream");
         response.setHeader("Content-Disposition", "attachment; filename=\"" + archivo.getName() + "\"");
@@ -156,15 +161,11 @@ public class CarpetaService {
     }
 
     public void agregarArchivosACarpeta(String dni, MultipartFile[] archivos, String descripcion) throws IOException {
-        Optional<Carpeta> carpetaOpt = carpetaRepository.findByNumeroCarpeta(dni);
-        if (carpetaOpt.isEmpty()) {
-            throw new IllegalArgumentException("No existe una carpeta con ese DNI");
-        }
+        Carpeta carpeta = carpetaRepository.findByNumeroCarpeta(dni)
+                .orElseThrow(() -> new IllegalArgumentException("No existe una carpeta con ese DNI"));
 
         File carpetaDni = new File(EXPEDIENTES_DIR + dni);
-        if (!carpetaDni.exists()) {
-            throw new IOException("La carpeta física no existe en el servidor");
-        }
+        if (!carpetaDni.exists()) throw new IOException("La carpeta física no existe en el servidor");
 
         for (MultipartFile archivo : archivos) {
             File nuevoArchivo = new File(carpetaDni, archivo.getOriginalFilename());
@@ -173,7 +174,6 @@ public class CarpetaService {
             }
         }
 
-        Carpeta carpeta = carpetaOpt.get();
         carpeta.setUltimaActualizacion(LocalDateTime.now());
         carpeta.setEstado(calcularEstado(carpeta.getUltimaActualizacion()));
         carpeta.setDescripcionUltimaActualizacion(descripcion);
@@ -182,36 +182,38 @@ public class CarpetaService {
 
     public void eliminarArchivoDeCarpeta(String dni, String nombreArchivo, String descripcion) throws IOException {
         File archivo = new File(EXPEDIENTES_DIR + dni + "/" + nombreArchivo);
-        if (!archivo.exists() || !archivo.isFile()) {
-            throw new IOException("El archivo no existe");
-        }
+        if (!archivo.exists() || !archivo.isFile()) throw new IOException("El archivo no existe");
+        if (!archivo.delete()) throw new IOException("No se pudo eliminar el archivo");
 
-        if (!archivo.delete()) {
-            throw new IOException("No se pudo eliminar el archivo");
-        }
-
-        Optional<Carpeta> carpetaOpt = carpetaRepository.findByNumeroCarpeta(dni);
-        if (carpetaOpt.isPresent()) {
-            Carpeta carpeta = carpetaOpt.get();
+        carpetaRepository.findByNumeroCarpeta(dni).ifPresent(carpeta -> {
             carpeta.setUltimaActualizacion(LocalDateTime.now());
             carpeta.setEstado(calcularEstado(carpeta.getUltimaActualizacion()));
             carpeta.setDescripcionUltimaActualizacion(descripcion);
             carpetaRepository.save(carpeta);
-        }
+        });
     }
 
     public void eliminarCarpetaCompleta(String dni) throws IOException {
-        Optional<Carpeta> carpetaOpt = carpetaRepository.findByNumeroCarpeta(dni);
-        if (carpetaOpt.isEmpty()) {
-            throw new IllegalArgumentException("No existe una carpeta con ese DNI");
-        }
+        Carpeta carpeta = carpetaRepository.findByNumeroCarpeta(dni)
+                .orElseThrow(() -> new IllegalArgumentException("No existe una carpeta con ese DNI"));
 
         File carpetaDni = new File(EXPEDIENTES_DIR + dni);
-        if (carpetaDni.exists()) {
-            eliminarRecursivamente(carpetaDni);
-        }
+        if (carpetaDni.exists()) eliminarRecursivamente(carpetaDni);
 
-        carpetaRepository.delete(carpetaOpt.get());
+        carpetaRepository.delete(carpeta);
+    }
+
+    public List<Carpeta> buscarCarpetasPorTexto(String query) {
+        String username = obtenerUsernameActual();
+        Usuario usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        String texto = query.toLowerCase();
+        return carpetaRepository.findAll().stream()
+                .filter(c -> c.getEncargados().contains(usuario))
+                .filter(c -> c.getNumeroCarpeta().toLowerCase().contains(texto)
+                        || c.getDescripcion().toLowerCase().contains(texto))
+                .toList();
     }
 
     private void eliminarRecursivamente(File file) {
@@ -240,26 +242,6 @@ public class CarpetaService {
         if (dias <= 20) return "ACTUALIZACIÓN POCO RECIENTE";
         return "HACE MUCHO NO SE ACTUALIZA";
     }
-
-    public List<Carpeta> buscarCarpetasPorTexto(String query) {
-        String username = obtenerUsernameActual();
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername(username);
-        if (usuarioOpt.isEmpty()) {
-            throw new IllegalArgumentException("Usuario no encontrado");
-        }
-        Usuario usuario = usuarioOpt.get();
-
-        String texto = query.toLowerCase();
-
-        return carpetaRepository.findAll().stream()
-                .filter(c -> c.getEncargados().contains(usuario))
-                .filter(c ->
-                        c.getNumeroCarpeta().toLowerCase().contains(texto) ||
-                                c.getDescripcion().toLowerCase().contains(texto)
-                )
-                .toList();
-    }
-
 }
 
 

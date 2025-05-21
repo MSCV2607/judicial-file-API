@@ -7,33 +7,32 @@ import jakarta.persistence.*;
 public class Cliente {
 
     @Id
-    private Long id;  // Es el mismo id que en persona
+    private Long id;
 
     private Integer edad;
 
-    // Constructor vacío (requerido por JPA)
+    private String telefono;
+    private String correo;
+
     public Cliente() {}
 
-    // Constructor con campos
-    public Cliente(Long id, Integer edad) {
+    public Cliente(Long id, Integer edad, String telefono, String correo) {
         this.id = id;
         this.edad = edad;
+        this.telefono = telefono;
+        this.correo = correo;
     }
 
-    // Getters y setters
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Integer getEdad() { return edad; }
+    public void setEdad(Integer edad) { this.edad = edad; }
 
-    public Integer getEdad() {
-        return edad;
-    }
+    public String getTelefono() { return telefono; }
+    public void setTelefono(String telefono) { this.telefono = telefono; }
 
-    public void setEdad(Integer edad) {
-        this.edad = edad;
-    }
+    public String getCorreo() { return correo; }
+    public void setCorreo(String correo) { this.correo = correo; }
 }
+

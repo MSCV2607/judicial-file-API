@@ -24,9 +24,11 @@ public class CarpetaController {
             @RequestParam String dni,
             @RequestParam String nombre,
             @RequestParam String apellido,
+            @RequestParam(required = false) String telefono,
+            @RequestParam(required = false) String correo,
             @RequestParam MultipartFile[] archivos) {
         try {
-            carpetaService.crearCarpeta(dni, nombre, apellido, archivos);
+            carpetaService.crearCarpeta(dni, nombre, apellido, telefono, correo, archivos);
             return ResponseEntity.ok("Carpeta creada con éxito");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -94,7 +96,7 @@ public class CarpetaController {
     public ResponseEntity<String> eliminarCarpetaCompleta(@RequestParam String dni) {
         try {
             carpetaService.eliminarCarpetaCompleta(dni);
-            return ResponseEntity.ok("Carpeta eliminada correctamente"); 
+            return ResponseEntity.ok("Carpeta eliminada correctamente");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (IOException e) {
@@ -107,5 +109,4 @@ public class CarpetaController {
         List<Carpeta> resultados = carpetaService.buscarCarpetasPorTexto(query);
         return ResponseEntity.ok(resultados);
     }
-
 }
