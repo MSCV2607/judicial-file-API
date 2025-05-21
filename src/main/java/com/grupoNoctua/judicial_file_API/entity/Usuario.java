@@ -26,7 +26,11 @@ public class Usuario {
     @Column(name = "es_admin")
     private boolean esAdmin;
 
+    @Column(name = "foto_perfil")
+    private String fotoPerfil; // ← NUEVO CAMPO
+
     // Getters y Setters
+
     public Long getId() {
         return id;
     }
@@ -67,12 +71,20 @@ public class Usuario {
         this.password = password;
     }
 
-    public boolean isEsAdmin() { // ⚠️ CORRECTO getter booleano
+    public boolean isEsAdmin() {
         return esAdmin;
     }
 
     public void setEsAdmin(boolean esAdmin) {
         this.esAdmin = esAdmin;
+    }
+
+    public String getFotoPerfil() {
+        return fotoPerfil;
+    }
+
+    public void setFotoPerfil(String fotoPerfil) {
+        this.fotoPerfil = fotoPerfil;
     }
 }
 
