@@ -35,7 +35,7 @@ public class CarpetaService {
     @Autowired private PersonaRepository personaRepository;
     @Autowired private JwtService jwtService;
 
-    public void crearCarpeta(String dni, String nombre, String apellido, String telefono, String correo, MultipartFile[] archivos) throws IOException {
+    public void crearCarpeta(String dni, String nombre, String apellido, int edad, String telefono, String correo, MultipartFile[] archivos) throws IOException {
         File carpetaRaiz = new File(EXPEDIENTES_DIR);
         if (!carpetaRaiz.exists()) carpetaRaiz.mkdir();
 
@@ -56,7 +56,6 @@ public class CarpetaService {
             }
         }
 
-        // Crear persona si no existe
         Persona persona = personaRepository.findByDni(dni).orElseGet(() -> {
             Persona p = new Persona();
             p.setDni(dni);
@@ -65,11 +64,10 @@ public class CarpetaService {
             return personaRepository.save(p);
         });
 
-        // Crear cliente si no existe
         Cliente cliente = clienteRepository.findById(persona.getId()).orElseGet(() -> {
             Cliente c = new Cliente();
             c.setId(persona.getId());
-            c.setEdad(0);
+            c.setEdad(edad);
             c.setTelefono((telefono == null || telefono.isEmpty()) ? "N/A" : telefono);
             c.setCorreo((correo == null || correo.isEmpty()) ? "N/A" : correo);
             return clienteRepository.save(c);
@@ -81,7 +79,7 @@ public class CarpetaService {
         carpeta.setFechaCreacion(LocalDate.now());
         carpeta.setUltimaActualizacion(LocalDateTime.now());
         carpeta.setEstado("ACTUALIZACIÓN RECIENTE");
-        carpeta.setDescripcionUltimaActualizacion("Carpeta creada con " + archivos.length + " archivo(s).");
+        carpeta.setDescripcionUltimaActualizacion("Carpeta creada con " + archivos.length + " archivo(s).);");
         carpeta.setDirectorio(carpetaDNI.getAbsolutePath());
 
         String username = obtenerUsernameActual();
@@ -243,6 +241,7 @@ public class CarpetaService {
         return "HACE MUCHO NO SE ACTUALIZA";
     }
 }
+
 
 
 

@@ -24,11 +24,12 @@ public class CarpetaController {
             @RequestParam String dni,
             @RequestParam String nombre,
             @RequestParam String apellido,
+            @RequestParam(required = false) Integer edad,
             @RequestParam(required = false) String telefono,
             @RequestParam(required = false) String correo,
             @RequestParam MultipartFile[] archivos) {
         try {
-            carpetaService.crearCarpeta(dni, nombre, apellido, telefono, correo, archivos);
+            carpetaService.crearCarpeta(dni, nombre, apellido, edad, telefono, correo, archivos);
             return ResponseEntity.ok("Carpeta creada con éxito");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -110,3 +111,4 @@ public class CarpetaController {
         return ResponseEntity.ok(resultados);
     }
 }
+
