@@ -94,7 +94,7 @@ public class CarpetaController {
     public ResponseEntity<String> eliminarCarpetaCompleta(@RequestParam String dni) {
         try {
             carpetaService.eliminarCarpetaCompleta(dni);
-            return ResponseEntity.ok("Carpeta eliminada correctamente");
+            return ResponseEntity.ok("Carpeta eliminada correctamente"); 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (IOException e) {
