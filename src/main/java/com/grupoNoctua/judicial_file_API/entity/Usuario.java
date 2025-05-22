@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 public class Usuario {
 
     @Id
-    private Long id; // FK de persona
+    private Long id;
 
     @MapsId
     @OneToOne
