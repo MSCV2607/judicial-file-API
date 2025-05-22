@@ -110,5 +110,15 @@ public class CarpetaController {
         List<Carpeta> resultados = carpetaService.buscarCarpetasPorTexto(query);
         return ResponseEntity.ok(resultados);
     }
+
+    @PostMapping("/unirse")
+    public ResponseEntity<String> unirseACarpeta(@RequestParam String dni) {
+        try {
+            carpetaService.unirseACarpetaPorDni(dni);
+            return ResponseEntity.ok("Te has unido correctamente a la carpeta");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
 

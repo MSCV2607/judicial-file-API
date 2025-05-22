@@ -240,6 +240,21 @@ public class CarpetaService {
         if (dias <= 20) return "ACTUALIZACIÓN POCO RECIENTE";
         return "HACE MUCHO NO SE ACTUALIZA";
     }
+
+    public void unirseACarpetaPorDni(String dni) {
+        Carpeta carpeta = carpetaRepository.findByNumeroCarpeta(dni)
+                .orElseThrow(() -> new IllegalArgumentException("No existe ninguna carpeta con ese DNI"));
+
+        String username = obtenerUsernameActual();
+        Usuario usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario autenticado no encontrado"));
+
+        if (!carpeta.getEncargados().contains(usuario)) {
+            carpeta.getEncargados().add(usuario);
+            carpetaRepository.save(carpeta);
+        }
+    }
+
 }
 
 
