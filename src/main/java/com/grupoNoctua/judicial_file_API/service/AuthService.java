@@ -10,6 +10,11 @@ import com.grupoNoctua.judicial_file_API.repository.PersonaRepository;
 import com.grupoNoctua.judicial_file_API.repository.UsuarioRepository;
 import com.grupoNoctua.judicial_file_API.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +32,9 @@ public class AuthService {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     public String register(RegisterRequest request) {
         if (usuarioRepository.findByUsername(request.getUsername()).isPresent()) {
@@ -60,16 +68,20 @@ public class AuthService {
     }
 
     public JwtResponse login(LoginRequest request) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getUsername(),
+                        request.getPassword()
+                )
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
         Usuario usuario = usuarioRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new CustomException("Usuario no encontrado", 404));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
-        boolean passwordMatches = passwordEncoder.matches(request.getPassword(), usuario.getPassword());
+        String token = jwtService.generateToken(usuario.getUsername());
 
-        if (!passwordMatches) {
-            throw new CustomException("Contraseña incorrecta", 401);
-        }
-
-        String jwtToken = jwtService.generateToken(usuario.getUsername());
-        return new JwtResponse(jwtToken);
+        return new JwtResponse(token, usuario.getId(), usuario.getUsername());
     }
 }
