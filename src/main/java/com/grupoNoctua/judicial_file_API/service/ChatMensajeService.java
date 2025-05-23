@@ -42,8 +42,8 @@ public class ChatMensajeService {
     }
 
     // Guardar mensaje a partir de DTO (se asume que DTO tiene emisorId y receptorId válidos)
-    public ChatMensajeDTO guardarMensaje(ChatMensajeDTO dto) {
-        Usuario emisor = usuarioService.buscarPorId(dto.getEmisorId());
+    public ChatMensajeDTO guardarMensajeDesdeUsername(ChatMensajeDTO dto, String emisorUsername) {
+        Usuario emisor = usuarioService.buscarPorUsername(emisorUsername);
         Usuario receptor = usuarioService.buscarPorId(dto.getReceptorId());
 
         ChatMensaje mensaje = new ChatMensaje();
@@ -53,7 +53,6 @@ public class ChatMensajeService {
         mensaje.setReceptor(receptor);
 
         ChatMensaje guardado = chatMensajeRepository.save(mensaje);
-
         return convertirADTO(guardado);
     }
 }

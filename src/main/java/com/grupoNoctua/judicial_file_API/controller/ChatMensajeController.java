@@ -5,6 +5,9 @@ import com.grupoNoctua.judicial_file_API.service.ChatMensajeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import java.util.List;
 
 @RestController
@@ -29,8 +32,13 @@ public class ChatMensajeController {
 
     // Enviar un mensaje nuevo
     @PostMapping
-    public ResponseEntity<ChatMensajeDTO> enviarMensaje(@RequestBody ChatMensajeDTO mensajeDTO) {
-        ChatMensajeDTO mensajeGuardado = chatMensajeService.guardarMensaje(mensajeDTO);
+    public ResponseEntity<ChatMensajeDTO> enviarMensaje(
+            @RequestBody ChatMensajeDTO mensajeDTO,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        String username = userDetails.getUsername(); // <- se obtiene del token
+
+        ChatMensajeDTO mensajeGuardado = chatMensajeService.guardarMensajeDesdeUsername(mensajeDTO, username);
         return ResponseEntity.ok(mensajeGuardado);
     }
 }
