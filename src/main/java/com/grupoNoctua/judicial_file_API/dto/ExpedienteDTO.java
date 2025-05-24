@@ -1,7 +1,8 @@
 package com.grupoNoctua.judicial_file_API.dto;
 
 public class ExpedienteDTO {
-    private String dni;
+    private Long id;
+    private String nombreCarpeta;
     private String nombre;
     private String apellido;
     private String encargado;
@@ -10,10 +11,10 @@ public class ExpedienteDTO {
     private String telefono;
     private String correo;
 
-    // Constructor completo
-    public ExpedienteDTO(String dni, String nombre, String apellido, String encargado,
+    public ExpedienteDTO(Long id, String nombreCarpeta, String nombre, String apellido, String encargado,
                          String ultimaActualizacion, String edad, String telefono, String correo) {
-        this.dni = dni;
+        this.id = id;
+        this.nombreCarpeta = nombreCarpeta;
         this.nombre = nombre;
         this.apellido = apellido;
         this.encargado = encargado;
@@ -23,9 +24,11 @@ public class ExpedienteDTO {
         this.correo = correo;
     }
 
-    // Getters y Setters
-    public String getDni() { return dni; }
-    public void setDni(String dni) { this.dni = dni; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getNombreCarpeta() { return nombreCarpeta; }
+    public void setNombreCarpeta(String nombreCarpeta) { this.nombreCarpeta = nombreCarpeta; }
 
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
@@ -48,4 +51,5 @@ public class ExpedienteDTO {
     public String getCorreo() { return correo; }
     public void setCorreo(String correo) { this.correo = correo; }
 }
+
 

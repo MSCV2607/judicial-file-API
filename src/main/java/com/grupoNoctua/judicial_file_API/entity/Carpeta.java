@@ -16,6 +16,9 @@ public class Carpeta {
     @Column(name = "numero_carpeta", unique = true, nullable = false)
     private String numeroCarpeta;
 
+    @Column(name = "nombre_carpeta", nullable = false, length = 255)
+    private String nombreCarpeta;
+
     @Column(length = 500)
     private String descripcion;
 
@@ -51,16 +54,18 @@ public class Carpeta {
     )
     private Set<Cliente> clientes;
 
-    // Constructores
+    // Constructor vacío
     public Carpeta() {}
 
-    public Carpeta(Long id, String numeroCarpeta, String descripcion, String estado,
+    // Constructor completo
+    public Carpeta(Long id, String numeroCarpeta, String nombreCarpeta, String descripcion, String estado,
                    LocalDate fechaCreacion, LocalDateTime ultimaActualizacion,
                    String descripcionUltimaActualizacion,
                    String directorio, String tipoArchivo,
                    Set<Usuario> encargados, Set<Cliente> clientes) {
         this.id = id;
         this.numeroCarpeta = numeroCarpeta;
+        this.nombreCarpeta = nombreCarpeta;
         this.descripcion = descripcion;
         this.estado = estado;
         this.fechaCreacion = fechaCreacion;
@@ -88,6 +93,14 @@ public class Carpeta {
 
     public void setNumeroCarpeta(String numeroCarpeta) {
         this.numeroCarpeta = numeroCarpeta;
+    }
+
+    public String getNombreCarpeta() {
+        return nombreCarpeta;
+    }
+
+    public void setNombreCarpeta(String nombreCarpeta) {
+        this.nombreCarpeta = nombreCarpeta;
     }
 
     public String getDescripcion() {
@@ -162,5 +175,6 @@ public class Carpeta {
         this.clientes = clientes;
     }
 }
+
 
 

@@ -24,12 +24,13 @@ public class CarpetaController {
             @RequestParam String dni,
             @RequestParam String nombre,
             @RequestParam String apellido,
+            @RequestParam String nombreCarpeta,
             @RequestParam(required = false) Integer edad,
             @RequestParam(required = false) String telefono,
             @RequestParam(required = false) String correo,
             @RequestParam MultipartFile[] archivos) {
         try {
-            carpetaService.crearCarpeta(dni, nombre, apellido, edad, telefono, correo, archivos);
+            carpetaService.crearCarpeta(dni, nombre, apellido, nombreCarpeta, edad, telefono, correo, archivos);
             return ResponseEntity.ok("Carpeta creada con éxito");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -44,10 +45,10 @@ public class CarpetaController {
         return ResponseEntity.ok(carpetas);
     }
 
-    @GetMapping("/archivos/{dni}")
-    public ResponseEntity<List<String>> verArchivosDeCarpeta(@PathVariable String dni) {
+    @GetMapping("/archivos/{id}")
+    public ResponseEntity<List<String>> verArchivosDeCarpeta(@PathVariable Long id) {
         try {
-            List<String> archivos = carpetaService.listarArchivosPorDni(dni);
+            List<String> archivos = carpetaService.listarArchivosPorId(id);
             return ResponseEntity.ok(archivos);
         } catch (IOException e) {
             return ResponseEntity.internalServerError().build();
@@ -55,25 +56,25 @@ public class CarpetaController {
     }
 
     @GetMapping("/descargar")
-    public void descargarCarpeta(@RequestParam String dni, HttpServletResponse response) throws IOException {
-        carpetaService.descargarCarpetaComoZip(dni, response);
+    public void descargarCarpeta(@RequestParam Long id, HttpServletResponse response) throws IOException {
+        carpetaService.descargarCarpetaComoZip(id, response);
     }
 
     @GetMapping("/archivo")
     public void descargarArchivoEspecifico(
-            @RequestParam String dni,
+            @RequestParam Long id,
             @RequestParam String nombreArchivo,
             HttpServletResponse response) throws IOException {
-        carpetaService.descargarArchivoEspecifico(dni, nombreArchivo, response);
+        carpetaService.descargarArchivoEspecifico(id, nombreArchivo, response);
     }
 
     @PostMapping("/actualizar")
     public ResponseEntity<String> agregarArchivosACarpeta(
-            @RequestParam String dni,
+            @RequestParam Long id,
             @RequestParam MultipartFile[] archivos,
             @RequestParam String descripcion) {
         try {
-            carpetaService.agregarArchivosACarpeta(dni, archivos, descripcion);
+            carpetaService.agregarArchivosACarpeta(id, archivos, descripcion);
             return ResponseEntity.ok("Archivos agregados correctamente");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error al subir archivos");
@@ -82,11 +83,11 @@ public class CarpetaController {
 
     @DeleteMapping("/archivo")
     public ResponseEntity<String> eliminarArchivo(
-            @RequestParam String dni,
+            @RequestParam Long id,
             @RequestParam String nombreArchivo,
             @RequestParam String descripcion) {
         try {
-            carpetaService.eliminarArchivoDeCarpeta(dni, nombreArchivo, descripcion);
+            carpetaService.eliminarArchivoDeCarpeta(id, nombreArchivo, descripcion);
             return ResponseEntity.ok("Archivo eliminado correctamente");
         } catch (IOException e) {
             return ResponseEntity.status(500).body("Error al eliminar archivo: " + e.getMessage());
@@ -94,9 +95,9 @@ public class CarpetaController {
     }
 
     @DeleteMapping("/eliminar")
-    public ResponseEntity<String> eliminarCarpetaCompleta(@RequestParam String dni) {
+    public ResponseEntity<String> eliminarCarpetaCompleta(@RequestParam Long id) {
         try {
-            carpetaService.eliminarCarpetaCompleta(dni);
+            carpetaService.eliminarCarpetaCompleta(id);
             return ResponseEntity.ok("Carpeta eliminada correctamente");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -105,20 +106,22 @@ public class CarpetaController {
         }
     }
 
-    @GetMapping("/buscar")
-    public ResponseEntity<List<Carpeta>> buscarCarpetas(@RequestParam String query) {
-        List<Carpeta> resultados = carpetaService.buscarCarpetasPorTexto(query);
-        return ResponseEntity.ok(resultados);
-    }
-
     @PostMapping("/unirse")
-    public ResponseEntity<String> unirseACarpeta(@RequestParam String dni) {
+    public ResponseEntity<String> unirseACarpeta(@RequestParam Long id) {
         try {
-            carpetaService.unirseACarpetaPorDni(dni);
+            carpetaService.unirseACarpetaPorId(id);
             return ResponseEntity.ok("Te has unido correctamente a la carpeta");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @GetMapping("/buscar")
+    public ResponseEntity<List<Carpeta>> buscarCarpetas(@RequestParam String query) {
+        List<Carpeta> resultados = carpetaService.buscarCarpetasPorTexto(query);
+        return ResponseEntity.ok(resultados);
+    }
 }
+
+
 

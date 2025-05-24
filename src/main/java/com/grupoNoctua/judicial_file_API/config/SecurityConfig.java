@@ -43,6 +43,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/api/chatmensajes/**").authenticated()
+                        .requestMatchers("/carpetas/**").authenticated()
                         .anyRequest().authenticated()
                 )
 
