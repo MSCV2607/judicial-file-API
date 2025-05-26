@@ -47,14 +47,15 @@ public class CarpetaService {
             return personaRepository.save(p);
         });
 
-        Cliente cliente = clienteRepository.findById(persona.getId()).orElseGet(() -> {
-            Cliente c = new Cliente();
-            c.setId(persona.getId());
-            c.setEdad(edad);
-            c.setTelefono((telefono == null || telefono.isEmpty()) ? "N/A" : telefono);
-            c.setCorreo((correo == null || correo.isEmpty()) ? "N/A" : correo);
-            return clienteRepository.save(c);
-        });
+        Cliente cliente = clienteRepository.findById(persona.getId()).orElse(null);
+        if (cliente == null) {
+            cliente = new Cliente();
+            cliente.setPersona(persona);
+            cliente.setEdad(edad);
+            cliente.setTelefono((telefono == null || telefono.isEmpty()) ? "N/A" : telefono);
+            cliente.setCorreo((correo == null || correo.isEmpty()) ? "N/A" : correo);
+            cliente = clienteRepository.save(cliente);
+        }
 
         Carpeta carpeta = new Carpeta();
         carpeta.setNombreCarpeta(nombreCarpeta);
@@ -238,7 +239,6 @@ public class CarpetaService {
         return jwtService.extractUsername(token);
     }
 
-
     private String calcularEstado(LocalDateTime ultimaActualizacion) {
         long dias = ChronoUnit.DAYS.between(ultimaActualizacion.toLocalDate(), LocalDate.now());
         if (dias <= 10) return "ACTUALIZACIÓN RECIENTE";
@@ -257,14 +257,12 @@ public class CarpetaService {
                 .filter(c ->
                         (c.getDescripcion() != null && c.getDescripcion().toLowerCase().contains(texto)) ||
                                 (c.getNumeroCarpeta() != null && c.getNumeroCarpeta().toLowerCase().contains(texto)) ||
-                                (c.getNombreCarpeta() != null && c.getNombreCarpeta().toLowerCase().contains(texto))
+                                (c.getNombreCarpeta() != null && c.getNombreCarpeta().toLowerCase().contains(texto)) ||
+                                c.getClientes().stream()
+                                        .map(cliente -> personaRepository.findById(cliente.getId()).orElse(null))
+                                        .filter(Objects::nonNull)
+                                        .anyMatch(persona -> persona.getDni() != null && persona.getDni().contains(texto))
                 )
                 .toList();
     }
-
 }
-
-
-
-
-
