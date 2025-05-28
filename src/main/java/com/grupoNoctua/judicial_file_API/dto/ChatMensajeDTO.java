@@ -27,7 +27,7 @@ public class ChatMensajeDTO {
         this.receptorUsername = receptorUsername;
     }
 
-    // Getters y setters completos
+
 
     public Long getId() {
         return id;

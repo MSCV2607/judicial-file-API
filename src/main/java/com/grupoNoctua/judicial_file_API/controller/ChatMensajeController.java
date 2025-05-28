@@ -20,7 +20,7 @@ public class ChatMensajeController {
         this.chatMensajeService = chatMensajeService;
     }
 
-    // Listar mensajes entre dos usuarios (se pasan IDs en query params)
+
     @GetMapping("/conversacion")
     public ResponseEntity<List<ChatMensajeDTO>> listarMensajesEntreUsuarios(
             @RequestParam Long emisorId,
@@ -30,7 +30,7 @@ public class ChatMensajeController {
         return ResponseEntity.ok(mensajes);
     }
 
-    // Enviar un mensaje nuevo
+
     @PostMapping
     public ResponseEntity<ChatMensajeDTO> enviarMensaje(
             @RequestBody ChatMensajeDTO mensajeDTO,

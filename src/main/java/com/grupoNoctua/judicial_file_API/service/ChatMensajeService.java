@@ -22,7 +22,6 @@ public class ChatMensajeService {
         this.usuarioService = usuarioService;
     }
 
-    // Conversión Entity -> DTO
     public ChatMensajeDTO convertirADTO(ChatMensaje mensaje) {
         return new ChatMensajeDTO(
                 mensaje.getId(),
@@ -35,13 +34,13 @@ public class ChatMensajeService {
         );
     }
 
-    // Listar mensajes entre dos usuarios
+
     public List<ChatMensajeDTO> listarMensajesEntreUsuarios(Long emisorId, Long receptorId) {
         List<ChatMensaje> mensajes = chatMensajeRepository.findMensajesEntreUsuarios(emisorId, receptorId);
         return mensajes.stream().map(this::convertirADTO).collect(Collectors.toList());
     }
 
-    // Guardar mensaje a partir de DTO (se asume que DTO tiene emisorId y receptorId válidos)
+
     public ChatMensajeDTO guardarMensajeDesdeUsername(ChatMensajeDTO dto, String emisorUsername) {
         Usuario emisor = usuarioService.buscarPorUsername(emisorUsername);
         Usuario receptor = usuarioService.buscarPorId(dto.getReceptorId());

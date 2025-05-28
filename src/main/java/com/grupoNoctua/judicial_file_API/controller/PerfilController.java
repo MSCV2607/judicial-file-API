@@ -42,7 +42,7 @@ public class PerfilController {
         dto.setApellido(usuario.getPersona().getApellido());
         dto.setUsername(usuario.getUsername());
         dto.setEmail(usuario.getEmail());
-        dto.setFotoPerfil(usuario.getFotoPerfil()); // puede ser null
+        dto.setFotoPerfil(usuario.getFotoPerfil());
 
         return ResponseEntity.ok(dto);
     }
@@ -88,7 +88,7 @@ public class PerfilController {
             Path destino = carpeta.resolve(username + extension);
             Files.copy(archivo.getInputStream(), destino, StandardCopyOption.REPLACE_EXISTING);
 
-            usuario.setFotoPerfil(username + extension); // Solo guardamos el nombre
+            usuario.setFotoPerfil(username + extension);
             usuarioRepository.save(usuario);
 
             return ResponseEntity.ok().build();
@@ -112,7 +112,7 @@ public class PerfilController {
         Path archivoFoto;
 
         try {
-            // Si tiene foto personalizada
+
             if (usuario.getFotoPerfil() != null) {
                 archivoFoto = carpeta.resolve(usuario.getFotoPerfil());
                 if (Files.exists(archivoFoto)) {
@@ -125,7 +125,7 @@ public class PerfilController {
                 }
             }
 
-            // Si no tiene foto personalizada, usar la por defecto
+
             archivoFoto = carpeta.resolve("FOTODEPERFILDEFECTO.jpg");
             if (Files.exists(archivoFoto)) {
                 Resource recurso = new UrlResource(archivoFoto.toUri());

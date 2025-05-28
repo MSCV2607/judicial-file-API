@@ -17,7 +17,6 @@ public class ChatMensaje {
     @Column(name = "fecha_envio", nullable = false)
     private LocalDateTime fechaEnvio;
 
-    // Asumiendo que tienes una entidad Usuario para emisor y receptor
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "emisor_id", nullable = false)
     private Usuario emisor;
@@ -26,11 +25,10 @@ public class ChatMensaje {
     @JoinColumn(name = "receptor_id", nullable = false)
     private Usuario receptor;
 
-    // Constructor vacío
+
     public ChatMensaje() {
     }
 
-    // Getters y setters
 
     public Long getId() {
         return id;

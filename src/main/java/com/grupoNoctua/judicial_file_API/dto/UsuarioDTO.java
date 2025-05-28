@@ -15,8 +15,6 @@ public class UsuarioDTO {
         this.nombreCompleto = nombreCompleto;
     }
 
-    // Getters y setters
-
     public Long getId() {
         return id;
     }

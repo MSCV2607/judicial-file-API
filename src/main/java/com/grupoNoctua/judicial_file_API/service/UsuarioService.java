@@ -26,7 +26,7 @@ public class UsuarioService {
         return usuarioOpt.orElse(null);
     }
 
-    // Nuevo método para listar todos los usuarios
+
     public List<Usuario> listarTodos() {
         return usuarioRepository.findAll();
     }

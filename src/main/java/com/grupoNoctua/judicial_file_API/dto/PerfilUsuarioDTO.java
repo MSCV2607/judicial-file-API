@@ -6,9 +6,8 @@ public class PerfilUsuarioDTO {
     private String apellido;
     private String username;
     private String email;
-    private String fotoPerfil; // NUEVO CAMPO
+    private String fotoPerfil;
 
-    // Getters y Setters
 
     public String getNombre() {
         return nombre;

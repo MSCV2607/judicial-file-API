@@ -27,9 +27,9 @@ public class Usuario {
     private boolean esAdmin;
 
     @Column(name = "foto_perfil")
-    private String fotoPerfil; // ← NUEVO CAMPO
+    private String fotoPerfil;
 
-    // Getters y Setters
+
 
     public Long getId() {
         return id;

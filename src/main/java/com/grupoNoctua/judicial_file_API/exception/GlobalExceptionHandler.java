@@ -25,7 +25,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleOtherErrors(Exception ex) {
-        ex.printStackTrace(); // 👈 esto muestra el error real en consola
+        ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Error interno: " + ex.getMessage());
     }

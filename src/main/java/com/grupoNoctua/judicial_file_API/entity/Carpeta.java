@@ -54,10 +54,10 @@ public class Carpeta {
     )
     private Set<Cliente> clientes;
 
-    // Constructor vacío
+
     public Carpeta() {}
 
-    // Constructor completo
+
     public Carpeta(Long id, String numeroCarpeta, String nombreCarpeta, String descripcion, String estado,
                    LocalDate fechaCreacion, LocalDateTime ultimaActualizacion,
                    String descripcionUltimaActualizacion,
@@ -77,7 +77,7 @@ public class Carpeta {
         this.clientes = clientes;
     }
 
-    // Getters y Setters
+
 
     public Long getId() {
         return id;

@@ -20,7 +20,7 @@ public class ExpedienteController {
 
     @GetMapping("/listar")
     public ResponseEntity<List<Carpeta>> listarExpedientes(Authentication authentication) {
-        String username = authentication.getName(); // Usuario logueado
+        String username = authentication.getName();
 
         List<Carpeta> carpetas = expedienteService.listarCarpetasPorUsuario(username);
         return ResponseEntity.ok(carpetas);
